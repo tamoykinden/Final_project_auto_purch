@@ -193,4 +193,3 @@ class OrderItem(models.Model):
 
     def __str__(self):
         return f'Позиция заказа {self.order.id}: {self.product_info.product.name}'
-    
