@@ -1,5 +1,6 @@
 from django.urls import path
 from . import views
+from .views import TaskStatusView
 
 urlpatterns = [
     # Аутентификация и пользователи
@@ -22,4 +23,6 @@ urlpatterns = [
     path('orders/<int:pk>/', views.OrderDetailView.as_view(), name='order-detail'),
     path('orders/<int:order_id>/status/', views.OrderStatusView.as_view(), name='order-status'),
     path('orders/<int:order_id>/confirm/', views.OrderConfirmView.as_view(), name='order-confirm'),
+
+    path('tasks/<str:task_id>/', TaskStatusView.as_view(), name='task-status'),
 ]

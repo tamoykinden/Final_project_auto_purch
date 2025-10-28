@@ -11,4 +11,6 @@ urlpatterns = [
     
     # Управление состоянием магазина
     path('state/', views.SupplierState.as_view(), name='supplier-state'),
+    
+    path('admin/import/', views.SupplierImportView.as_view(), name='supplier-admin-import'),
 ]

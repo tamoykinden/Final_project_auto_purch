@@ -5,6 +5,7 @@ from rest_framework.permissions import IsAuthenticated
 from django.db import transaction
 from backend.models import Shop, Category, Product, ProductInfo, Parameter, ProductParameter, Order, OrderItem
 from backend.utils import load_yaml_from_url
+from .tasks import do_import
 
 
 class SupplierUpdate(APIView):
@@ -29,14 +30,14 @@ class SupplierUpdate(APIView):
         Return:
             Response: JSON с результатом операции
         """
-        # Проверка, что пользователь - поставщик
+        # Проверяется что пользователь - поставщик
         if request.user.type != 'supplier':
             return Response({
                 'Status': False,
                 'Error': 'Доступно только для поставщиков'
             }, status=status.HTTP_403_FORBIDDEN)
         
-        # Магазин пользователя
+        # Получается магазин пользователя
         try:
             shop = Shop.objects.get(user=request.user)
         except Shop.DoesNotExist:
@@ -45,17 +46,18 @@ class SupplierUpdate(APIView):
                 'Error': 'Магазин не найден для данного пользователя'
             }, status=status.HTTP_404_NOT_FOUND)
         
-        # Обработка загрузки из URL
+        # Обрабатывается загрузка из URL
         url = request.data.get('url')
         if url:
-            try:
-                data = load_yaml_from_url(url)
-                return self._import_price_data(data, shop)
-            except Exception as e:
-                return Response({
-                    'Status': False,
-                    'Error': f'Ошибка загрузки данных: {str(e)}'
-                }, status=status.HTTP_400_BAD_REQUEST)
+            # Асинхронный импорт через Celery
+            task = do_import.delay(shop_id=shop.id, import_url=url)
+            
+            return Response({
+                'Status': True,
+                'Message': 'Импорт товаров запущен в фоновом режиме',
+                'TaskID': task.id,
+                'ShopID': shop.id
+            })
         
         return Response({
             'Status': False,
@@ -475,3 +477,57 @@ class SupplierState(APIView):
                 'Error': 'Магазин не найден'
             }, status=status.HTTP_404_NOT_FOUND)
         
+class SupplierImportView(APIView):
+    """
+    API-endpoint для запуска импорта товаров поставщика через админку
+    
+    Позволяет администраторам запускать импорт для любого поставщика.
+    Требует прав администратора.
+    """
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        """
+        Запуск импорта товаров для поставщика через админку
+        
+        Args:
+            request: HTTP запрос с данными импорта
+            
+        Return:
+            Response: JSON с результатом операции
+        """
+        # Проверяются права администратора
+        if not request.user.is_staff:
+            return Response({
+                'Status': False,
+                'Error': 'Доступно только для администраторов'
+            }, status=status.HTTP_403_FORBIDDEN)
+        
+        shop_id = request.data.get('shop_id')
+        import_url = request.data.get('import_url')
+        
+        if not shop_id or not import_url:
+            return Response({
+                'Status': False,
+                'Error': 'Не указаны shop_id или import_url'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            shop = Shop.objects.get(id=shop_id)
+            
+            # Асинхронный импорт через Celery
+            task = do_import.delay(shop_id=shop.id, import_url=import_url)
+            
+            return Response({
+                'Status': True,
+                'Message': f'Импорт товаров для магазина "{shop.name}" запущен',
+                'TaskID': task.id,
+                'ShopID': shop.id,
+                'ShopName': shop.name
+            })
+            
+        except Shop.DoesNotExist:
+            return Response({
+                'Status': False,
+                'Error': 'Магазин не найден'
+            }, status=status.HTTP_404_NOT_FOUND)

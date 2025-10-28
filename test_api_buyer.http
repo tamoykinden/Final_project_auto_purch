@@ -1,114 +1,105 @@
-### Регистрация пользователя-поставщика
+### Регистрация покупателя
 POST http://localhost:8000/api/user/register/
 Content-Type: application/json
 
 {
-    "username": "supplier2",
-    "password": "supplier1234", 
-    "password2": "supplier1234",
-    "email": "supplier@example.com",
+    "username": "buyer4",
+    "password": "buyer123455", 
+    "password2": "buyer123455",
+    "email": "buyer@example.com",
     "first_name": "Иван",
-    "last_name": "Поставщик",
-    "type": "supplier",
-    "company": "ООО Поставка",
-    "position": "Директор"
+    "last_name": "Покупатель",
+    "type": "buyer",
+    "company": "ООО Покупатель",
+    "position": "Менеджер"
 }
 
-### Авторизация поставщика
+### Авторизация покупателя
 POST http://localhost:8000/api/user/login/
 Content-Type: application/json
 
 {
-    "username": "supplier2",
-    "password": "supplier1234"
+    "username": "denistamoykin",
+    "password": "12wqasxz"
 }
 
-### Получить состояние магазина поставщика
-GET http://localhost:8000/api/supplier/state/
-Authorization: Token {{supplier_token}}
+### Получить список магазинов
+GET http://localhost:8000/api/shops/
 
-### Включить прием заказов
-PATCH http://localhost:8000/api/supplier/state/
-Authorization: Token {{supplier_token}}
+### Получить список категорий
+GET http://localhost:8000/api/categories/
+
+### Получить все товары
+GET http://localhost:8000/api/products/
+
+### Получить товары с фильтрацией
+GET http://localhost:8000/api/products/?category_id=1
+
+### Получить детали товара
+GET http://localhost:8000/api/products/1/
+
+### Получить профиль пользователя
+GET http://localhost:8000/api/user/profile/
+Authorization: Token {{buyer_token}}
+
+### Добавить контакт
+POST http://localhost:8000/api/user/contacts/
+Authorization: Token {{buyer_token}}
 Content-Type: application/json
 
 {
-    "is_active": true
+    "city": "Москва",
+    "street": "Ленина",
+    "house": "10",
+    "apartment": "25",
+    "phone": "+79991234567"
 }
 
-### Обновить прайс-лист поставщика
-POST http://localhost:8000/api/supplier/update/
-Authorization: Token {{supplier_token}}
+### Получить список контактов
+GET http://localhost:8000/api/user/contacts/
+Authorization: Token {{buyer_token}}
+
+### Добавить товар в корзину
+POST http://localhost:8000/api/basket/
+Authorization: Token {{buyer_token}}
 Content-Type: application/json
 
 {
-    "url": "https://raw.githubusercontent.com/netology-code/pd-diplom/master/data/shop1.yaml"
+    "product_info": 1,
+    "quantity": 2
 }
 
-### Получить заказы поставщика
-GET http://localhost:8000/api/supplier/orders/
-Authorization: Token {{supplier_token}}
+### Посмотреть корзину
+GET http://localhost:8000/api/basket/
+Authorization: Token {{buyer_token}}
 
-### Получить детали заказа (нужен существующий order_id)
-GET http://localhost:8000/api/supplier/orders/1/
-Authorization: Token {{supplier_token}}
-
-### Обновить статус заказа (нужен существующий order_id)
-PATCH http://localhost:8000/api/supplier/orders/1/
-Authorization: Token {{supplier_token}}
+### Оформить заказ из корзины
+POST http://localhost:8000/api/orders/
+Authorization: Token {{buyer_token}}
 Content-Type: application/json
 
 {
-    "status": "confirmed"
+    "contact_id": 1
 }
 
-### Тестирование ошибок - доступ покупателя к API поставщика
-GET http://localhost:8000/api/supplier/state/
-Authorization: Token {{auth_token}}
+### Посмотреть историю заказов
+GET http://localhost:8000/api/orders/
+Authorization: Token {{buyer_token}}
 
-### Тестирование ошибок - неверный токен
-GET http://localhost:8000/api/supplier/state/
-Authorization: Token неверный_токен_123
+### Подтвердить заказ с отправкой email
+POST http://localhost:8000/api/orders/1/confirm/
+Authorization: Token {{buyer_token}}
 
-### Тестирование ошибок - нет магазина у пользователя
-POST http://localhost:8000/api/user/register/
+### Проверить статус задачи
+GET http://localhost:8000/api/tasks/ваш_task_id/
+Authorization: Token {{buyer_token}}
+
+### Запуск импорта через админку (требует is_staff=True)
+POST http://localhost:8000/api/supplier/admin/import/
+Authorization: Token ваш_токен_администратора
 Content-Type: application/json
 
 {
-    "username": "supplier_no_shop",
-    "password": "password123", 
-    "password2": "password123",
-    "email": "noshop@example.com",
-    "first_name": "Петр",
-    "last_name": "Безмагазинный",
-    "type": "supplier"
-}
-
-POST http://localhost:8000/api/user/login/
-Content-Type: application/json
-
-{
-    "username": "supplier_no_shop",
-    "password": "password123"
-}
-
-GET http://localhost:8000/api/supplier/state/
-Authorization: Token {{supplier_no_shop_token}}
-
-### Обновление прайс-листа с неверным URL
-POST http://localhost:8000/api/supplier/update/
-Authorization: Token {{supplier_token}}
-Content-Type: application/json
-
-{
-    "url": "https://invalid-url-that-does-not-exist.com/data.yaml"
-}
-
-### Обновление прайс-листа без URL
-POST http://localhost:8000/api/supplier/update/
-Authorization: Token {{supplier_token}}
-Content-Type: application/json
-
-{
-    "wrong_field": "value"
+    "shop_id": 1,
+    "import_url": "https://raw.githubusercontent.com/netology-code/pd-diplom/master/data/shop1.yaml"
 }

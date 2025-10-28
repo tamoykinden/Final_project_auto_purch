@@ -15,6 +15,10 @@ from django.db import transaction
 from django.core.mail import send_mail
 from django.conf import settings
 from .models import Category, ProductInfo, Shop, Contact, Order, OrderItem, Product
+from .tasks import send_order_confirmation_email
+from celery.result import AsyncResult
+
+
 
 class RegisterView(APIView):
     """
@@ -596,25 +600,17 @@ class OrderConfirmView(APIView):
         try:
             order = Order.objects.get(id=order_id, user=request.user)
             
-            # Отправка email уведомления
-            if settings.DEBUG:
-                # В режиме отладки логируем отправку email
-                print(f"Email отправлен: Заказ #{order_id} подтвержден для пользователя {request.user.email}")
-            else:
-                # В продакшене отправляем реальный email
-                send_mail(
-                    subject=f'Подтверждение заказа #{order_id}',
-                    message=f'Ваш заказ #{order_id} подтвержден. Спасибо за покупку!\n\n'
-                           f'Статус: {order.get_status_display()}\n'
-                           f'Дата: {order.dt.strftime("%d.%m.%Y %H:%M")}',
-                    from_email=settings.DEFAULT_FROM_EMAIL,
-                    recipient_list=[request.user.email],
-                    fail_silently=True,
-                )
+            # Асинхронная отправка email через Celery
+            task = send_order_confirmation_email.delay(
+                order_id=order.id,
+                user_email=request.user.email,
+                user_name=request.user.get_full_name() or request.user.username
+            )
             
             return Response({
                 'Status': True,
-                'Message': 'Заказ подтвержден, email отправлен'
+                'Message': 'Заказ подтвержден, email отправляется',
+                'TaskID': task.id  # ID задачи для отслеживания
             })
             
         except Order.DoesNotExist:
@@ -622,3 +618,37 @@ class OrderConfirmView(APIView):
                 'Status': False,
                 'Error': 'Заказ не найден'
             }, status=status.HTTP_404_NOT_FOUND)
+
+class TaskStatusView(APIView):
+    """
+    API-endpoint для проверки статуса Celery задач
+    """
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, task_id):
+        """
+        Получение статуса задачи
+        
+        Args:
+            request: HTTP запрос
+            task_id: ID Celery задачи
+            
+        Return:
+            Response: JSON со статусом задачи
+        """
+        
+        task_result = AsyncResult(task_id)
+        
+        response_data = {
+            'task_id': task_id,
+            'status': task_result.status,
+            'ready': task_result.ready()
+        }
+        
+        if task_result.ready():
+            if task_result.successful():
+                response_data['result'] = task_result.result
+            else:
+                response_data['error'] = str(task_result.result)
+        
+        return Response(response_data)
