@@ -12,7 +12,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 from pathlib import Path
 from dotenv import load_dotenv
-from os import getenv
+from os import getenv, path
 
 
 load_dotenv()
@@ -166,3 +166,5 @@ CELERY_IMPORT_TASK_CONFIG = {
     'queue': 'import',
     'time_limit': 300,
 }
+
+STATIC_ROOT = path.join(BASE_DIR, 'static')

@@ -1,0 +1,55 @@
+version: '3.8'
+
+services:
+  postgres:
+    container_name: Final_work_purch_db
+    image: postgres:15-alpine
+    env_file:
+      - .env
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "${DB_PORT}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  backend:
+    container_name: Final_work_purch_backend
+    build: .
+    command: >
+      sh -c "sleep 10 &&
+             python manage.py migrate &&
+             python manage.py collectstatic --noinput &&
+             python manage.py runserver 0.0.0.0:8000"
+    env_file:
+      - .env
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+    depends_on:
+      - postgres
+      - redis
+
+  redis:
+    container_name: Final_work_purch_redis
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+  
+  celery:
+    container_name: Final_work_purch_celery
+    build: .
+    command: celery -A final_work_auto_purch worker --loglevel=info
+    env_file:
+      - .env
+    volumes:
+      - .:/app
+    depends_on:
+      - postgres
+      - redis
+
+volumes:
+  postgres_data:
