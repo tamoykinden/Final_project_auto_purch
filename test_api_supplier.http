@@ -1,0 +1,173 @@
+### Регистрация пользователя
+POST http://localhost:8000/api/user/register/
+Content-Type: application/json
+
+{
+    "username": "testuser2",
+    "password": "testpassword1234", 
+    "password2": "testpassword1234",
+    "email": "test2@example.com",
+    "first_name": "Иван",
+    "last_name": "Иванов",
+    "type": "buyer"
+}
+
+### Авторизация
+POST http://localhost:8000/api/user/login/
+Content-Type: application/json
+
+{
+    "username": "testuser2",
+    "password": "testpassword1234"
+}
+
+### Получить список магазинов
+GET http://localhost:8000/api/shops/
+
+### Получить список категорий
+GET http://localhost:8000/api/categories/
+
+### Получить все товары
+GET http://localhost:8000/api/products/
+
+### Получить товары с фильтрацией
+GET http://localhost:8000/api/products/?category_id=1
+
+### Получить детали товара
+GET http://localhost:8000/api/products/1/
+
+### Получить профиль пользователя
+GET http://localhost:8000/api/user/profile/
+Authorization: Token {{auth_token}}
+
+### Обновить профиль пользователя
+PATCH http://localhost:8000/api/user/profile/
+Authorization: Token {{auth_token}}
+Content-Type: application/json
+
+{
+    "first_name": "Новое Имя",
+    "last_name": "Новая Фамилия"
+}
+
+### Добавить контакт
+POST http://localhost:8000/api/user/contacts/
+Authorization: Token {{auth_token}}
+Content-Type: application/json
+
+{
+    "city": "Москва",
+    "street": "Ленина",
+    "house": "10",
+    "apartment": "25",
+    "phone": "+79991234567"
+}
+
+### Получить список контактов
+GET http://localhost:8000/api/user/contacts/
+Authorization: Token {{auth_token}}
+
+### Добавить товар в корзину
+POST http://localhost:8000/api/basket/
+Authorization: Token {{auth_token}}
+Content-Type: application/json
+
+{
+    "product_info": 1,
+    "quantity": 2
+}
+
+### Посмотреть корзину
+GET http://localhost:8000/api/basket/
+Authorization: Token {{auth_token}}
+
+### Обновить количество товара в корзине
+PATCH http://localhost:8000/api/basket/
+Authorization: Token {{auth_token}}
+Content-Type: application/json
+
+{
+    "items": [
+        {
+            "id": 1,
+            "quantity": 3
+        }
+    ]
+}
+
+### Удалить товар из корзины
+DELETE http://localhost:8000/api/basket/
+Authorization: Token {{auth_token}}
+Content-Type: application/json
+
+{
+    "items": [1]
+}
+
+### Оформить заказ из корзины
+POST http://localhost:8000/api/orders/
+Authorization: Token {{auth_token}}
+Content-Type: application/json
+
+{
+    "contact_id": 1
+}
+
+### Посмотреть историю заказов
+GET http://localhost:8000/api/orders/
+Authorization: Token {{auth_token}}
+
+### Получить детали заказа
+GET http://localhost:8000/api/orders/1/
+Authorization: Token {{auth_token}}
+
+### Изменить статус заказа
+PATCH http://localhost:8000/api/orders/1/status/
+Authorization: Token {{auth_token}}
+Content-Type: application/json
+
+{
+    "status": "confirmed"
+}
+
+### Подтвердить заказ с отправкой email
+POST http://localhost:8000/api/orders/1/confirm/
+Authorization: Token {{auth_token}}
+
+### Удалить контакт
+DELETE http://localhost:8000/api/user/contacts/
+Authorization: Token {{auth_token}}
+Content-Type: application/json
+
+{
+    "id": 1
+}
+
+### Регистрация с несовпадающими паролями
+POST http://localhost:8000/api/user/register/
+Content-Type: application/json
+
+{
+    "username": "testuser2",
+    "password": "password123", 
+    "password2": "differentpassword",
+    "email": "test2@example.com",
+    "first_name": "Петр",
+    "last_name": "Иванов"
+}
+
+### Авторизация с неверными данными
+POST http://localhost:8000/api/user/login/
+Content-Type: application/json
+
+{
+    "username": "wronguser",
+    "password": "wrongpassword"
+}
+
+### Доступ без аутентификации
+GET http://localhost:8000/api/user/profile/
+
+### Неверный токен
+GET http://localhost:8000/api/user/profile/
+Authorization: Token неверный_токен_123
