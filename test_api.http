@@ -81,6 +81,29 @@ Content-Type: application/json
 GET http://localhost:8000/api/basket/
 Authorization: Token {{auth_token}}
 
+### Обновить количество товара в корзине
+PATCH http://localhost:8000/api/basket/
+Authorization: Token {{auth_token}}
+Content-Type: application/json
+
+{
+    "items": [
+        {
+            "id": 1,
+            "quantity": 3
+        }
+    ]
+}
+
+### Удалить товар из корзины
+DELETE http://localhost:8000/api/basket/
+Authorization: Token {{auth_token}}
+Content-Type: application/json
+
+{
+    "items": [1]
+}
+
 ### Оформить заказ из корзины
 POST http://localhost:8000/api/orders/
 Authorization: Token {{auth_token}}
@@ -118,29 +141,6 @@ Content-Type: application/json
 
 {
     "id": 1
-}
-
-### Обновить количество товара в корзине
-PATCH http://localhost:8000/api/basket/
-Authorization: Token {{auth_token}}
-Content-Type: application/json
-
-{
-    "items": [
-        {
-            "id": 1,
-            "quantity": 3
-        }
-    ]
-}
-
-### Удалить товар из корзины
-DELETE http://localhost:8000/api/basket/
-Authorization: Token {{auth_token}}
-Content-Type: application/json
-
-{
-    "items": [1]
 }
 
 ### Регистрация с несовпадающими паролями
